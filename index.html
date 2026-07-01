@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seniority List Management System</title>
+    <!-- Tailwind CSS for Modern Minimalist Design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons for Sleek Modern UI Elements -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for beautiful visualization views -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <!-- Screen 1: Beautiful Gateway Landing/Login Page -->
+    <div id="loginScreen" class="flex-1 flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white border border-slate-200 shadow-xl rounded-2xl p-8 space-y-6 transform transition-all">
+            <div class="text-center space-y-2">
+                <div class="inline-flex p-3 bg-slate-900 text-white rounded-xl mb-2">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-950 tracking-tight">Seniority Registry Portal</h2>
+                <p class="text-sm text-slate-500">BPDB Executive & Sub-Divisional Engineers Directory</p>
+            </div>
+            
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">System Engineered By</p>
+                <p class="text-base font-bold text-slate-900 mt-1">Md. Minhajul Haque</p>
+                <p class="text-xs text-slate-500 font-medium">Sub Divisional Engineer, BPDB</p>
+                <p class="text-[10px] text-slate-400 font-mono mt-0.5">ID: 102333</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <!-- User ID Field -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold text-slate-600">User ID</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                        <input type="text" id="username" placeholder="Enter User ID..." required
+                               class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all">
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold text-slate-600">Password</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                        <input type="password" id="password" placeholder="Enter Password..." required
+                               class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all">
+                    </div>
+                    <div id="loginError" class="hidden text-xs text-red-600 font-medium flex items-center gap-1 mt-1">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Invalid User ID or Password. Try again.
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl text-sm shadow-sm transition-colors flex items-center justify-center gap-2">
+                    Authenticate Entry <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Core Application Workspace Dashboard Area (Hidden Initially) -->
+    <div id="appWorkspace" class="hidden flex-1 flex flex-col">
+        <!-- Sticky Navigation Bar Layout -->
+        <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-slate-900 text-white rounded-lg">
+                        <i data-lucide="database" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-semibold tracking-tight text-slate-900">Seniority Registry</h1>
+                        <p class="text-[11px] text-slate-500">System Source: Seniority List of SDE .pdf</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Hub Sub-Tabs Switchers -->
+                <nav class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button onclick="switchTab('database')" id="tabBtn-database" class="px-4 py-1.5 rounded-lg text-xs font-medium transition-all bg-white text-slate-950 shadow-sm">
+                        Database Records
+                    </button>
+                    <button onclick="switchTab('analytics')" id="tabBtn-analytics" class="px-4 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-950">
+                        Analytics Engine View
+                    </button>
+                </nav>
+                
+                <!-- System Author Panel Metadata -->
+                <div class="text-right border-l border-slate-200 pl-4 hidden md:block">
+                    <p class="text-xs font-semibold text-slate-900">Md. Minhajul Haque</p>
+                    <p class="text-[10px] text-slate-500 font-medium">Sub Divisional Engineer | ID 102333</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- View Segment Content Layer 1: Table Registry System -->
+        <main id="view-database" class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center shadow-sm">
+                <div class="relative flex-1 max-w-2xl">
+                    <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search directory records by keyword parameters..." 
+                           class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all">
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openModal('add')" class="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Entry
+                    </button>
+                    <div class="bg-slate-100 px-3 py-2.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 flex items-center gap-2">
+                        <i data-lucide="layers" class="w-3.5 h-3.5"></i> Total Records: <span id="recordCount" class="font-bold text-slate-900">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/70 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                <th class="py-4 px-6 w-20 text-center">Serial</th>
+                                <th class="py-4 px-6">Officer Name</th>
+                                <th class="py-4 px-6">Current Designation</th>
+                                <th class="py-4 px-6">Date of Birth</th>
+                                <th class="py-4 px-6">ID Number</th>
+                                <th class="py-4 px-6">PRL Retire Date</th>
+                                <th class="py-4 px-6 text-right w-32">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
+                    </table>
+                </div>
+                <div id="noResults" class="hidden flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <i data-lucide="folder-search" class="w-8 h-8 text-slate-300 mb-2"></i>
+                    <h3 class="text-sm font-medium text-slate-900">No matching registry vectors mapped</h3>
+                </div>
+            </div>
+        </main>
+
+        <!-- View Segment Content Layer 2: Complex Analytics Hub Engine -->
+        <main id="view-analytics" class="hidden flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            <!-- Numerical Aggregates Widgets Metrics Cards layout -->
+            <div id="statsBreakdown" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Data injection grids mapping elements dynamically below -->
+            </div>
+
+            <!-- Visualization Canvas Render Frameworks panels grids -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-sm lg:col-span-2 space-y-4">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-900">PRL Distribution Analysis View</h3>
+                        <p class="text-xs text-slate-500">Aggregated tracking timelines of retirement curves.</p>
+                    </div>
+                    <div class="h-72">
+                        <canvas id="prlTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-900">Designation Breakdown Metrics</h3>
+                        <p class="text-xs text-slate-500">Structural allocations inside organizational frameworks.</p>
+                    </div>
+                    <div class="h-72 flex items-center justify-center">
+                        <canvas id="postPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Global Footer Metadata block alignment system -->
+        <footer class="mt-auto border-t border-slate-200 bg-white py-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+                <p>&copy; 2026 Seniority Directory Engine. Reference verification: Seniority List of SDE .pdf</p>
+                <div class="flex items-center gap-1.5 font-medium text-slate-500">
+                    <i data-lucide="terminal" class="w-3.5 h-3.5 text-slate-400"></i> Dev Core Architecture: <span class="text-slate-800">Md. Minhajul Haque</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- universal system CRUD workflow operations modal view frame context logic -->
+    <div id="actionModal" class="fixed inset-0 z-50 invisible opacity-0 transition-all duration-200 flex items-center justify-center p-4 sm:p-6">
+        <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="bg-white w-full max-w-lg rounded-xl border border-slate-200 shadow-xl overflow-hidden relative z-10 transform scale-95 transition-transform duration-200" id="modalCard">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <h3 id="modalTitle" class="text-sm font-semibold text-slate-900">Action Config Window</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <form id="entryForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="formActionContext"><input type="hidden" id="targetIndexId">
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Serial</label>
+                        <input type="text" id="inputSerial" required class="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-slate-50/50 focus:border-slate-900 focus:outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">ID Code</label>
+                        <input type="text" id="inputId" required class="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-slate-50/50 focus:border-slate-900 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Officer Identity Name</label>
+                    <input type="text" id="inputName" required class="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-slate-50/50 focus:border-slate-900 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Post Assignment</label>
+                    <input type="text" id="inputDesignation" required class="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-slate-50/50 focus:border-slate-900 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Date of Birth</label>
+                        <input type="text" id="inputDob" required class="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-slate-50/50 focus:border-slate-900 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">PRL Retire Date</label>
+                        <input type="text" id="inputPrl" required class="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-slate-50/50 focus:border-slate-900 focus:outline-none">
+                    </div>
+                </div>
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 mt-4">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium shadow-sm">Save Registry Parameters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Core Scripting Logics, Datasets, Matrix Filtering & Analytics Chart Engine Routers -->
+    <script>
+        const baseDataset = [
+            { s: "১", n: "জনাব শাহেদ মোহাম্মদ মেহেদী ইকবাল", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২৪-০১-১৯৮৪", id: "১-০১৯৭৯", prl: "২৪-০১-২০৪৩" },
+            { s: "২", n: "জনাব ওয়ালিউর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৬-১১-১৯৮৭", id: "১-০১৮৯৩", prl: "১৬-১১-২০৪৬" },
+            { s: "৩", n: "জনাব আব্দুল্লাহ আল-মামুন সরদার", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১৮-০৭-১৯৮৩", id: "১-০১৯৬৪", prl: "১৮-০৭-২০৪২" },
+            { s: "৪", n: "জনাব অরিন্দম কুমার পাল", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-১০-১৯৮০", id: "১-০১৯৭৫", prl: "০১-১০-২০৪৬" },
+            { s: "৫", n: "জনাব মোঃ সাদীদ আল হোসেন", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২০-০৯-১৯৮৯", id: "১-০১৯৮০", prl: "২০-০৯-২০৪৮" },
+            { s: "৬", n: "জনাব মোঃ ashraful ইসলাম", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-০১-১৯৮৪", id: "১-০১৯৮১", prl: "০১-০১-২০৪৩" },
+            { s: "৭", n: "জনাব নুরুল আমিন", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১৮-০১-১৯৮৩", id: "১-০১৯৮২", prl: "১৮-০১-২০৪২" },
+            { s: "৮", n: "জনাব মোঃ জান্নাতুল নাঈম", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-০১-১৯৮৭", id: "১-০১৯৮৩", prl: "০১-০১-২০৪৬" },
+            { s: "৯", n: "জনাব রিমন সাহা", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৪-০১-১৯৮৩", id: "১-০১৯৮৫", prl: "০৪-০১-২০৪২" },
+            { s: "১০", n: "জনাব মোঃ আরিফুর রহমান", d: "উপ-ব্যবস্থাপক (ভারপ্রাপ্ত)", dob: "০১-১২-১৯৮৮", id: "১-০১৯৮৬", prl: "০১-১২-২০৪৭" },
+            { s: "১১", n: "জনাব তানভীর হাছান ভূইয়া", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২৭-১২-১৯৮৬", id: "১-০১৯৮৭", prl: "২৭-১২-২০৪৬" },
+            { s: "১২", n: "জনাব মোঃ তানভীর আহমেদ", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২৬-১১-১৯৮৫", id: "১-০১৯৮৮", prl: "২৬-১১-২০৪৪" },
+            { s: "১৩", n: "জনাব মোঃ ইমাম হাসান", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১৪-১১-১৯৮৫", id: "১-০১৯৮৯", prl: "১৪-১১-২০৪৪" },
+            { s: "১৪", n: "জনাব পিংকি দত্ত", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "২৩-০৩-১৯৮৬", id: "১-০১৯৯০", prl: "২৩-০৩-২০৪৫" },
+            { s: "১৫", n: "জনাব আব্দুল মান্নান দাদু", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-০১-১৯৮৮", id: "১-০১৯৯১", prl: "০১-০১-২০৪৭" },
+            { s: "১৬", n: "জনাব হাফেজ আহাম্মদ ভূঞা", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১৬-০১-১৯৮৪", id: "১-০১৯৯২", prl: "১৬-০১-২০৪৩" },
+            { s: "৫৯", n: "জনাব মোঃ আরিফুর রহমান", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-১২-১৯৮৭", id: "১-০১৯৯৩", prl: "০১-১২-২০৪৬" },
+            { s: "১৮", n: "জনাব মোঃ আসাদুজ্জামান", d: "উপ-ব্যবস্থাপক (ভারঃ)", dob: "০৫-০১-১৯৮৬", id: "১-০১৯৯৭", prl: "০৫-০১-২০৪৫" },
+            { s: "১৯", n: "জনাব রাবেয়া জামান", d: "উপ-পরিচালক (ভারপ্রাপ্ত)", dob: "১৮-০৬-১৯৮৫", id: "১-০২০০০", prl: "১৮-০৬-২০৪৪" },
+            { s: "২০", n: "জনাব তাওহীদা তাসলিমা", d: "সহকারী প্রধান প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৪-০৯-১৯৮৬", id: "১-০২০০২", prl: "০৪-০৯-২০৪৫" },
+            { s: "২১", n: "জনাব লুৎফুন্নাহার", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১০-১১-১৯৮৩", id: "১-০২০০৩", prl: "১০-১১-২০৪২" },
+            { s: "২২", n: "জনাব নীলা দে", d: "উপ-পরিচালক (ভারপ্রাপ্ত)", dob: "১৫-০৯-১৯৮৩", id: "১-০২০০৪", prl: "১৫-০৯-২০৪২" },
+            { s: "২৩", n: "জনাব প্রতীতি চাকমা", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৫-১২-১৯৮৬", id: "১-০২০০৫", prl: "০৫-১২-২০৪২" },
+            { s: "২৪", n: "জনাব মোঃ রিয়াজুল হক", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-০১-১৯৮৭", id: "১-০২০০৬", prl: "০১-০১-২০৪৬" },
+            { s: "২৫", n: "জনাব মোঃ আসাদুজ্জামান", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৩-১২-১৯৭৯", id: "১-০环境保护", prl: "০৩-১২-২০৩৮" },
+            { s: "২৬", n: "জনাব মোঃ তৌহিদুল ইসলাম", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "৩০-১২-১৯৮৮", id: "১-০২০০৮", prl: "৩০-১২-২০৪৭" },
+            { s: "২৭", n: "জনাব সুমিতা রানী বিশ্বাস", d: "উপ-পরিচালক (ভারপ্রাপ্ত)", dob: "৩০-১১-১৯৮৭", id: "১-০২০০৯", prl: "৩০-১১-২০৪৬" },
+            { s: "২৮", n: "জনাব মোঃ আসাদুজ্জামান চুন্নু", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "৩০-১২-১৯৮৭", id: "১-০২০১০", prl: "৩০-১২-২০৪৬" },
+            { s: "২৯", n: "জনাব মোঃ মাইনুল হোছাইন", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২৫-১২-১৯৮২", id: "১-০২০১১", prl: "২৫-১২-২০৪১" },
+            { s: "৩০", n: "জনাব ফাহমিদা জামালী", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১৮-০১-১৯৮৬", id: "১-০২০১২", prl: "১৮-০১-২০৪৫" },
+            { s: "৩১", n: "জনাব ইসমাইল হোসেন", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২২-১২-১৯৮২", id: "১-০২০১৩", prl: "২২-১২-২০৪১" },
+            { s: "৩২", n: "জনাব মোঃ সাদেকুর রহমান", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৫-০৭-১৯৮২", id: "১-০২০১৪", prl: "০৫-০৭-২০৪১" },
+            { s: "৩৩", n: "জনাব মোঃ তারেক ছেফাতী", d: "উপবিভাগীয়-প্রকৌশলী (ভারঃ)", dob: "১৪-১২-১৯৮৫", id: "১-০২০১৬", prl: "১৪-১২-২০৪৪" },
+            { s: "৩৪", n: "জনাব গিয়াস ইবনে আলম", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১৫-viii-১৯৮৮", id: "১-০২০১৭", prl: "১৫-০৮-২০৪৭" },
+            { s: "৩৫", n: "জনাব মোঃ সুলтан মাহামুদ", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২৫-十一-১৯৮৬", id: "১-০২০১৮", prl: "২৫-十一-২০৪৫" },
+            { s: "৩৬", n: "জনাব হোসেন মাহমুদ শামীম ফরহাদ", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৬-০২-১৯৮৫", id: "১-০২০১৯", prl: "০৬-০২-২০৪৪" },
+            { s: "৩৭", n: "জনাব মোঃ ইকরাম হাসান চৌধুরী", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২০-০৮-১৯৮৮", id: "১-০২০২০", prl: "২০-০৮-২০৪৭" },
+            { s: "৩৮", n: "জনাব সাহাবুদ্দিন আহমদ", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২৮-০২-১৯৮৫", id: "১-০২০২১", prl: "২৮-০২-২০৪৪" },
+            { s: "৩৯", n: "জনাব মোঃ মেহেদী হাসান সুমন", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৮-০৬-১৯৮৬", id: "১-০২০২২", prl: "০৮-০৬-২০৪৫" },
+            { s: "৪০", n: "জনাব গাজী ফাতেমা-তুজ-জোহরা", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০২-০৯-১৯৮৬", id: "১-০২০২৫", prl: "০২-০৯-২০৪৫" },
+            { s: "৪১", n: "জনাব নেهلিন নূরাইয়্যাহ নিকি", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২১-十一-১৯৮৭", id: "১-০২০২৬", prl: "২১-十一-২০৪৬" },
+            { s: "৪২", n: "জনাব নওয়াজ আহমেদ khan", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১০-十一-১৯৮৫", id: "১-০২০২৭", prl: "১০-十一-২০৪৪" },
+            { s: "৪৩", n: "জনাব কাজী নওশাদ আযম", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২০-১০-১৯৮৬", id: "১-০২০普及", prl: "২০-১০-২০৪৫" },
+            { s: "৪৪", n: "জনাব মোঃ হাবিবul বাহার", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "২২-১০-১৯৮০", id: "১-০২০২৯", prl: "২২-১০-২০৩৯" },
+            { s: "৪৫", n: "জনাব মোহাম্মদ মোজাফফর হোসেন", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-০৫-১৯৮৪", id: "১-০২০৩৩", prl: "০১-০৫-২০৪৩" },
+            { s: "৪৬", n: "জনাব এ.এইচ.এম. এমদাদুল পাশা", d: "উপ-পরিচালক (নির্বাহী প্রকৌশলী ভারপ্রাপ্ত)", dob: "২৭-০৪-১৯৮৪", id: "১-০২০৩৪", prl: "২৭-০৪-২০৪৩" },
+            { s: "৪৭", n: "জনাব অনিক সরকার", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০১-十一-১৯৮৮", id: "১-০২০৩৬", prl: "০১-十一-২০৪৭" },
+            { s: "৪৮", n: "জনাব মোঃ ওমর ফারুক", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১০-十一-১৯৮৫", id: "১-০২০৩৮", prl: "১০-十一-২০৪৪" },
+            { s: "৪৯", n: "জনাব মোঃ মনোয়ার জাহিদ khan", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-十一-১৯৮৭", id: "১-০২০৩৯", prl: "০১-十一-২০৪৬" },
+            { s: "৫০", n: "জনাব মোঃ এরশাদ আলী", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০৫-১০-১৯৮৬", id: "১-০২০৪১", prl: "০৫-১০-২০৪৫" },
+            { s: "৫১", n: "জনাব তানভীর আহমেদ", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০৮-০৭-১৯৮৭", id: "১-০২০৪০", prl: "০৮-০৭-২০৪৬" },
+            { s: "৫২", n: "জনাব খন্দকার কামরুজ্জামান", d: "নির্বাহী প্রকৌশলী, (ভারপ্রাপ্ত)", dob: "০৪-০১-১৯৮৩", id: "১-০২০৪২", prl: "০৪-০১-২০৪২" },
+            { s: "৫৩", n: "জনাব মোঃ সালেহ", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "৩০-০৭-১৯৮৬", id: "১-০২০৪৩", prl: "৩০-০৭-২০৪৫" },
+            { s: "৫৪", n: "জনাব জোবায়ের রহমান", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৭-十一-১৯৮৬", id: "১-০১৯০৪", prl: "০৭-十一-২০৪৫" },
+            { s: "৫৫", n: "জনাব রুহানা রাঈয়ান প্রমী", d: "উপ-পরিচালক (ভারপ্রাপ্ত)", dob: "১৬-১০-১৯৮৮", id: "১-০১৯০৫", prl: "১৬-১০-২০৪৭" },
+            { s: "৫৬", n: "জনাব মোঃ রোকনুজ্জামান khan", d: "উপ-ব্যবস্থাপক (নির্বাহী প্রকৌশলী ভারপ্রাপ্ত)", dob: "০৬-১২-১৯৮৫", id: "১-০১৯০৬", prl: "০৬-১২-২০৪৪" },
+            { s: "৫৭", n: "জনাব মোঃ সুফি আলম", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১১-১২-১৯৭৭", id: "১-০১৯০৭", prl: "১১-১২-২০৩৬" },
+            { s: "৫৮", n: "জনাব মোঃ শরিফুল ইসলাম খান", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০৫-১২-১৯৮২", id: "১-০১৯০৮", prl: "০৫-১২-২০৪১" },
+            { s: "৫৯", n: "জনাব মোঃ এনামুল হক", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১৫-০৫-১৯৮৪", id: "১-০১৯০৯", prl: "১৫-০৫-২০৪৩" },
+            { s: "৬০", n: "জনাব মোঃ সুলтан মাহমুদ", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০১-০১-১৯৮২", id: "১-০১৯১০", prl: "০১-০১-২০৪১" },
+            { s: "৬১", n: "জনাব এস, এম, মনিরুজ্জামান", d: "উপ-ব্যবস্থাপক (নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১৫-十一-১৯৭৯", id: "১-০১৯১২", prl: "১৫-十一-২০৩৮" },
+            { s: "৬২", n: "জনাব নাজমুন নাহার", d: "নির্বাহী প্রকৌশলী ভারপ্রাপ্ত", dob: "৩১-১২-১৯৮৩", id: "১-০১৯১৩", prl: "৩১-১২-২০৪২" },
+            { s: "৬৩", n: "জনাব ওয়াহিদুল ইসলাম", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-০৩-১৯৮৯", id: "১-০১৯১৪", prl: "০১-০৩-২০४৮" },
+            { s: "৬৪", n: "জনাব মোঃ কারমান আলী সরকার", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "৩১-১০-১৯৮৬", id: "১-০১৯১৫", prl: "৩১-১০-২০৪৫" },
+            { s: "৬৫", n: "জনাব মোহাম্মদ আলী bkr", d: "প্রকল্প পরিচালক", dob: "৩০-১০-১৯৮৮", id: "১-০১৯১৬", prl: "৩০-১০-২০৪৭" },
+            { s: "৬৬", n: "জনাব শামীম আহমেদ", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২৫-১২-১৯৮৭", id: "১-০১৯১৭", prl: "২৫-১২-২০৪৬" },
+            { s: "৬৭", n: "জনাব মোঃ মাহমুদুল হাসান", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "৩১-১২-১৯৮৭", id: "১-০১৯১৮", prl: "৩১-১২-২০৪৬" },
+            { s: "৬৮", n: "জনাব মোঃ আকবার আলী", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০৫-১০-১৯৮১", id: "১-০১৯১৯", prl: "০৫-১০-২০৪০" },
+            { s: "৬৯", n: "জনাব মোঃ এখলাছুর রহমান চৌধুরী", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-০২-১৯৭৯", id: "১-০১৯২০", prl: "০১-০২-২০৩৮" },
+            { s: "৭০", n: "জনাব মোঃ জাকারিয়া সরকার", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "২৭-০৯-১৯৮৪", id: "১-০১৯২১", prl: "২৭-০৯-২০৪৩" },
+            { s: "৭১", n: "জনাব মোঃ সাহাদাত হোসেন", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০১-০১-১৯৮৩", id: "১-০১৯২২", prl: "০১-০১-২০৪২" },
+            { s: "৭২", n: "জনাব মোঃ শফিকুল ইসলাম", d: "নির্বাহী প্রকৌঃ (ভারপ্রাপ্ত)", dob: "০৫-১০-১৯৮১", id: "১-০১৯২৩", prl: "০৫-১০-২০৪০" },
+            { s: "৭৩", n: "জনাব মোঃ মেহেদী হাসান ভূঞা", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০৬-০৪-১৯৮৬", id: "১-০১৯২৪", prl: "০৬-০৪-২০৪৫" },
+            { s: "৭৪", n: "জনাব মোঃ আতিয়ার রহমান", d: "নির্বাহী প্রকৌশলী, (ভারঃ)", dob: "২৫-十一-১৯৮২", id: "১-০১৯M", prl: "২৫-十一-২০৪১" },
+            { s: "৭৫", n: "জনাব আবু নাছের মোহাম্মদ আব্দুল হাই", d: "উপ-পরিচালক executive প্রকৌশলী (ভারঃ)", dob: "০১-০১-১৯৮২", id: "১-০১৯২৬", prl: "০১-০১-২০৪১" },
+            { s: "৭৬", n: "জনাব মোঃ ashikur রহমান", d: "নির্বাহী প্রকৌশলী, (ভারঃ)", dob: "০১-০১-১৯৮৩", id: "১-০১৯২৭", prl: "০১-০১-২০৪২" },
+            { s: "৭৭", n: "জনাব মোঃ মোস্তাফিজুর রহমান", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০৭-০৯-১৯৭৯", id: "১-০১৯২৮", prl: "০৭-০৯-২০৩৮" },
+            { s: "৭handle", n: "জনাব এস.এম. মাহমুদ হাসান", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "৩০-০১-১৯৯১", id: "১-০২০৪৪", prl: "৩০-০১-২০৫০" },
+            { s: "৭৯", n: "জনাব মোঃ শাহ আলম কমল", d: "নির্বাহী প্রকৌশলী, পর্ব (ভারঃ)", dob: "০২-০৬-১৯৮৩", id: "১-০২০৪৫", prl: "০২-০৬-২০৪২" },
+            { s: "৮০", n: "জনাব মোঃ মেহেদী হাসান", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১৫-১২-১৯৮৭", id: "১-০২০৪৬", prl: "১৫-১২-২০৪৭" },
+            { s: "৮১", n: "জনাব এস.এম. ইরফান উল্লাহ", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৯-০৯-১৯৮৭", id: "১-০২০৪৭", prl: "০৯-০৯-২০৪৬" },
+            { s: "৮২", n: "জনাব মোঃ ফয়сал আহমেদ", d: "নির্বাহী প্রকৌঃ (ভারপ্রাপ্ত)", dob: "২৫-১০-১৯৮৫", id: "১-০২০৪৮", prl: "২৫-১০-২০৪৪" },
+            { s: "৮৩", n: "জনাব মোঃ ইকরাম উদ্দিন সানি", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১৩-十一-১৯৮৬", id: "১-০২০৪৯", prl: "১৩-十一-২০৪৫" },
+            { s: "৮৪", n: "জনাব কায়েস মোঃ আবু রেজা", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২৫-০৬-১৯৮৮", id: "১-০২০৫০", prl: "২৫-০৬-২০৪৭" },
+            { s: "৮৫", n: "জনাব কাজী আসাদুল্লাহ আল গালিব", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "২৭-১২-১৯৮৯", id: "১-০২০৫১", prl: "২৭-১২-২০ can" },
+            { s: "৮৬", n: "জনাব মোঃ আবদুর রাজ্জাক", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "৩০-০৭-১৯  精度", id: "১-০২০৫২", prl: "৩০-০৭-২০৪৯" },
+            { s: "৮৭", n: "জনাব আবুল কালাম", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১২-০৬-১৯৮৮", id: "১-০২০৫৩", prl: "১২-০৬-২০৪৭" },
+            { s: "৮৮", n: "জনাব মোঃ রেজনুল হক", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০৯-০৯-১৯৮৯", id: "১-০২০৫৫", prl: "০৯-০৯-২০ coding" },
+            { s: "৮৯", n: "জনাব ওয়াদুদ আলী", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১৪-০৪-১৯৮৬", id: "১-০২০৫৬", prl: "১৪-০৪-২০৪৫" },
+            { s: "৯০", n: "জনাব মোঃ একরামul পাশা", d: "উপ-ব্যবস্থাপক (ভারঃ)", dob: "৩১-১২-১৯৮৭", id: "১-০২০৫৭", prl: "৩১-১২-২০৪৬" },
+            { s: "৯১", n: "জনাব অপর্ণা বড়ুয়া", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৭-০১-১৯৮৭", id: "১-০২০৬২", prl: "০৭-০১-২০৪৬" },
+            { s: "৯২", n: "জনাব সোহানুর রহমান শফিক", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১৫-০১-১৯৮৮", id: "১-০২০৬৬", prl: "১৫-০১-২০৪৭" },
+            { s: "৯৩", n: "জনাব এস.এম. তাসনিম আলম", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০১-০১-১৯৮৮", id: "১-০২০৬৭", prl: "০১-০১-২০৪৭" },
+            { s: "৯৪", n: "জনাব মোঃ আসিফ রেজা তারেক", d: "নির্বাহী প্রকৌঃ (ভারপ্রাপ্ত)", dob: "২৫-১২-১৯৯০", id: "১-০২০৬৯", prl: "২৫-১২-২০ can" },
+            { s: "৯৫", n: "জনাব মোহাম্মদ শামসুদ্দোহা", d: "উপ পরিচালক executive প্রকৌশলী (ভারঃ)", dob: "১৬-十一-১৯৮৮", id: "১-০২০৭০", prl: "১৬-十一-২০৪৭" },
+            { s: "৯6", n: "জনাব সানজানা হক", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৪-০২-১৯৯০", id: "১-০২০৭১", prl: "০৪-০২-২০ can" },
+            { s: "৯৭", n: "জনাব মোঃ আবubkr তালুকদার", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৩-১২-১৯৮৭", id: "১-০২০৭৩", prl: "০৩-১২-২০৪৬" },
+            { s: "৯৮", n: "জনাব এইচ.এম. এনামুল হক", d: "উপ পরিচালক executive প্রকৌশলী (ভারঃ)", dob: "১২-১২-১৯৮৪", id: "১-০২০৭৪", prl: "১২-১২-২০৪৩" },
+            { s: "৯৯", n: "জনাব মাহবুবুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৭-০৯-১৯৮৯", id: "১-০২০৭৬", prl: "০৭-০৯-২০ coding" },
+            { s: "১০০", n: "জনাব নরমীন নাহার", d: "নির্বাহী প্রকৌঃ (ভারপ্রাপ্ত)", dob: "০২-১২-১৯৯১", id: "১-০২০৭৮", prl: "০২-১২-২০৫০" },
+            { s: "১০১", n: "জনাব মিঠুন দত্ত", d: "নির্বাহী প্রকৌঃ (ভারপ্রাপ্ত)", dob: "০১-十一-১৯৮৯", id: "১-০২০৭৯", prl: "০১-十一-২০ coding" },
+            { s: "১০২", n: "জনাব মৌসুমী বেগম", d: "নির্বাহী প্রকৌঃ (ভারপ্রাপ্ত)", dob: "১০-০৭-১৯৮৫", id: "১-০২০৮০", prl: "১০-০৭-২০৪৪" },
+            { s: "১০৩", n: "  জনাব আফরোজা আকতার", d: "সহকারী প্রধান প্রকৌশলী (নির্বাহী ভারপ্রাপ্ত)", dob: "২৮-০৮-১৯৮৭", id: "১-০২০৮৩", prl: "২৮-০৮-২০৪৬" },
+            { s: "১০৪", n: "  জনাব মোঃ mshiuর রহমান", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১০-১২-১৯৮৮", id: "১-০২০৮৪", prl: "১০-১২-২০৪৭" },
+            { s: "১০৫", n: "  জনাব মোঃ আনিসুর রহমান শেখ", d: "নির্বাহী প্রকৌশলী (পরিচালন) (ভারঃ)", dob: "১৮-০৬-১৯৮৭", id: "১-০২০৮৫", prl: "১৮-০৬-২০৪৬" },
+            { s: "১০৬", n: "  জনাব মোঃ জালাল উদ্দীন", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১০-০১-১৯৮৯", id: "১-০২০৮৭", prl: "১০-০১-২০ coding" },
+            { s: "১০৭", n: "  জনাব ইকবাল হাসান", d: "উপ ব্যবস্থাপক, নিঃপ্রঃ (ভারপ্রাপ্ত)", dob: "০১-০১-১৯৯০", id: "১-০২০৮৮", prl: "০১-০৯-২০ can" },
+            { s: "১০৮", n: "  জনাব মোঃ ফিরোজ আহমেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-十一-১৯৮৮", id: "১-০২০৮৯", prl: "০১-十一-২০৪৭" },
+            { s: "১০৯", n: "  জনাব সৈয়দ এনাম رضا", d: "উপ পরিচালক executive প্রকৌশলী (পরিচালন) (ভারঃ)", dob: "২৭-০৯-১৯৯০", id: "১-০২০১৫", prl: "২৭-০৯-২০ can" },
+            { s: "১১০", n: "  জনাব এ.এ. জিহাদ বিন মাহমুদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৫", id: "১-০২০৯৩", prl: "০১-০১-২০৪৪" },
+            { s: "১১১", n: "  জনাব মোঃ হুমায়ুন কবীর চৌধুরী", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১৫-১২-১৯৮৪", id: "১-০২০৯৬", prl: "১৫-১২-২০৪৩" },
+            { s: "১১২", n: "  জনাব মোঃ তাজ উদ্দিন", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "২০-০৯-১৯৮৭", id: "১-০২০৯৭", prl: "২০-০৯-২০৪৬" },
+            { s: "১১৩", n: "  জনাব জুনাইদ রুশদি", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১৭-১২-১৯৯০", id: "১-০২০৯৯", prl: "১৭-১২-২০ can" },
+            { s: "১১৪", n: "  জনাব আ.হ.ম. আল-আফ্রিদী", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০১-০১-১৯৮৯", id: "১-০২১০১", prl: "০১-০১-২০ coding" },
+            { s: "১১৫", n: "  জনাব হোসেন মোঃ ফজলে রাববী", d: "নির্বাহী প্রকৌঃ (ভারপ্রাপ্ত)", dob: "০৫-০৫-১৯৮৯", id: "১-০২১০২", prl: "০৫-০৫-২০ coding" },
+            { s: "১১৬", n: "  জনাব রাসেল আহমাদ", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১২-১২-১৯৮৮", id: "১-০২১০৩", prl: "১২-১২-২০৪৭" },
+            { s: "১১৭", n: "  জনাব  عبدالله আল মাহমুদ চৌধুরী", d: "নির্বাহী প্রকৌঃ (ভারপ্রাপ্ত)", dob: "০১-০১-১৯৮৮", id: "১-০২১০৪", prl: "০১-০১-২০৪৬" },
+            { s: "১১৮", n: "  জনাব মোঃ মাসুদুর রহমান", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: " ৩১-১২-১৯৯০", id: "১-০২১০৬", prl: "৩১-১২-২০ can" },
+            { s: "১১৯", n: "  জনাব এম. আরিফুল হক", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "  ৩০-১২-১৯৮৮", id: "১-০২১০৭", prl: "৩০-১২-২০৪৭" },
+            { s: "১২০", n: "  জনাব মোঃ মিজানুর রহমান", d: "নির্বাহী প্রকৌশলী, পর্ব (ভারঃ)", dob: "০১-০১-১৯৮৭", id: "১-০২১০৮", prl: "০১-০১-২০৪৬" },
+            { s: "১২১", n: "  জনাব মোঃ শাহাদাত হোসেন", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০১-০১-১৯৮৯", id: "১-০২১০৯", prl: "০১-০১-২০ coding" },
+            { s: "১২২", n: "  জনাব মোঃ মইদুল হোসেন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৫-০৮-১৯৮৯", id: "১-০২১১০", prl: "০৫-০৮-২০ coding" },
+            { s: "১২৩", n: "  জনাব মোঃ ইমরান হাসান মাহমুদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৮-০৭-১৯৮৮", id: "১-০২১১১", prl: "১৮-০৭-২০৪৭" },
+            { s: "১২৪", n: "  জনাব মোঃ মোস্তাফিজুর রহমান", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১৫-০৮-১৯৮৪", id: "১-০২১১২", prl: "১৫-০৮-২০৪৩" },
+            { s: "১২৫", n: "  জনাব মোঃ হারুন অর রশিদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-০৫-১৯৮৬", id: "১-০২১১৩", prl: "৩০-০৫-২০৪৬" },
+            { s: "১২৬", n: "  জনাব মুঃ তানভীর হায়দার", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১০-০৫-১৯৮৯", id: "১-০২১৫", prl: "১০-০৫-২০ coding" },
+            { s: "১২৭", n: "  জনাব মোঃ রেজাউল করিম", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০৭-০৭-১৯৮৩", id: "১-০২১১৭", prl: "০৭-০৭-২০৪২" },
+            { s: "১২৮", n: "  জনাব মোঃ আব্দুল্লাহ আল মামুন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-০৬-১৯৯০", id: "১-০২১১৮", prl: "১০-০৬-২০ can" },
+            { s: "১২৯", n: "  জনাব মোঃ আব্দুল খালেক", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "৩০-০৮-১৯৮৮", id: "১-০২১২০", prl: "৩০-০৮-২০৪৭" },
+            { s: "১৩০", n: "  জনাব মোঃ শরিফুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১২-০৮-১৯৮৮", id: "১-০২১২৩", prl: "১২-০৮-২০৪৭" },
+            { s: "১৩১", n: "  জনাব মোঃ মোস্তাফিজুর রহমান", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "১০-১০-১৯৮৭", id: "১-০২১২৫", prl: "১০-১০-২০৪৬" },
+            { s: "১৩২", n: "  জনাব আবু মোঃ মাজেদুল বারী ভূঁইয়া", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৮-১০-১৯৮৮", id: "১-০২১২৭", prl: "২৮-১০-২০৪৭" },
+            { s: "১৩৩", n: "  জনাব সৈয়দ আমির হোসেন", d: "নির্বাহী প্রকৌশলী (ভারপ্রাপ্ত)", dob: "০২-十一-১৯৮২", id: "১-০২০২৩", prl: "০২-十一-২০৪১" },
+            { s: "১৩৪", n: "  জনাব আ.স.ম.  রেজাউন নবী", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "২২-০২-১৯৯১", id: "১-০২১৩০", prl: "২২-০২-২০৫০" },
+            { s: "১৩৫", n: "  জনাব মোঃ নেজামুল ইসলাম মজুমদার", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৬", id: "১-০২১৩১", prl: "০১-০১-২০৪৫" },
+            { s: "১৩৬", n: "  জনাব মোঃ জাহিদুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৪-০৯-১৯৮৮", id: "১-০২১ can", prl: "১৪-০৯-২০৪৭" },
+            { s: "১৩৭", n: "  জনাব মোঃ রেজাউল করিম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩১-১২-১৯৮৮", id: "১-০২১case", prl: "৩১-১২-২০৪৭" },
+            { s: "১৩৮", n: "  জনাব মোঃ রিফাত হোসেন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-১২-১৯৯২", id: "১-০২১৩৬", prl: "২০-১২-২০৫১" },
+            { s: "১৩৯", n: "  জনাব মোঃ তানভীর হাসান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৬-০৬-১৯৯০", id: "১-০২১৩৮", prl: "০৬-০৬-২০ can" },
+            { s: "১৪০", n: "  জনাব কল্যাণ বিশ্বাস", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-十一-১৯৮৮", id: "১-০২১৩৯", prl: "০১-十一-২০৪৭" },
+            { s: "১৪১", n: "  জনাব মোঃ সামিউন সাফী", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-১২-১৯৮৮", id: "১-০২১৪০", prl: "০১-১২-২০৪৭" },
+            { s: "১৪২", n: "  জনাব মোঃ সাবিবর হোসেন সরকার সাগর", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-১০-১৯৮৯", id: "১-০২১৪১", prl: "৩০-১০-২০ coding" },
+            { s: "১৪৩", n: "  জনাব মোঃ আল আমীন রাসেল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-十一-১৯৮৭", id: "১-০২১৪২", prl: "৩০-十一-২০৪৬" },
+            { s: "১৪৪", n: "  জনাব সজীব আহম্মেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৫-০১-১৯৮৯", id: "১-০২১৪৩", prl: "১৫-০১-২০ coding" },
+            { s: "১৪Map", n: "  জনাব ফাহিম বিন আলম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১২-০৮-১৯৮৭", id: "১-০২১৪৪", prl: "১২-০৮-২০৪৬" },
+            { s: "১৪৬", n: "  জনাব মোঃ আমিনুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩১-১২-১৯৯১", id: "১-০২১৪৫", prl: "৩১-১২-২০৫০" },
+            { s: "১৪৭", n: "  জনাব মোঃ ফারুক হোসেন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৬-০৯-১৯৮৯", id: "১-০২১৪৮", prl: "০৬-০৯-২০ coding" },
+            { s: "১৪৮", n: "  জনাব নুসরাত আফরীন প্রভা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৩-১২-১৯৮৯", id: "১-০২১৪৯", prl: "০৩-১২-২০ coding" },
+            { s: "১৪৯", n: "  জনাব আশফাকুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "十一-০২-১৯৮৯", id: "১-০২১৫০", prl: "十一-০২-২০ coding" },
+            { s: "১৫০", n: "  জনাব মোঃ mshiuর রহমান", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "২৭-০১-১৯৮৫", id: "১-০২১৫১", prl: "২৭-০১-২০৪৪" },
+            { s: "১৫১", n: "  জনাব মোঃ আব্দুল হাকিম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৪-০৬-১৯৮৬", id: "১-০২১৫২", prl: "২৪-০৬-২০ can" },
+            { s: "১৫২", n: "  জনাব মোঃ আমিনুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-১২-১৯৮৯", id: "১-০২১৫৩", prl: "২০-১২-২০ coding" },
+            { s: "১৫৩", n: "  জনাব মোঃ শাহাদাত ইসলাম", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "৩০-০৯-১৯৮৮", id: "১-০২১৫৪", prl: "৩০-০৯-২০৪৭" },
+            { s: "১৫৪", n: "  জনাব মোঃ ওবায়দুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-০৮-১৯৮৭", id: "১-০২১৫৬", prl: "১০-০৮-২০৪৬" },
+            { s: "১৫৫", n: "  জনাব মোঃ সাজ্জাদুল ইসলাম রানা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১২-১২-১৯৮৯", id: "১-০২১৫৯", prl: "১২-১২-২০ coding" },
+            { s: "১৫৬", n: "  জনাব মোঃ মাজহারুল ইসলাম ফকির", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯০", id: "১-০২১৫৭", prl: "০১-০১-২০ can" },
+            { s: "১৫৭", n: "  জনাব শাহরিয়ার মোর্শেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২২-১২-১৯  精度", id: "১-০২১৬০", prl: "২২-১২-২০ can" },
+            { s: "১৫৮", n: "  জনাব মোঃ সাদেকুল ইসলাম শাহীন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৭", id: "১-০২১6২", prl: "০১-০১-২০৪৬" },
+            { s: "১৫৯", n: "  জনাব মাসুম বিল্লাহ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৬-০২-১৯৯০", id: "১-০২১৬৩", prl: "০৬-০২-২০ can" },
+            { s: "১৬০", n: "  জনাব মোহাম্মদ খোরশেদ আলী চৌধুরী", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০৯-০৫-১৯৮৯", id: "১-০২১৬৪", prl: "০৯-০৫-২০ coding" },
+            { s: "১৬১", n: "  জনাব মোঃ মোশারফ হোসেন", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "৩১-১২-১৯৮৮", id: "১-০২১৬৫", prl: "৩১-১২-২০৪৭" },
+            { s: "১৬২", n: "  জনাব মনজুর মোর্শেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-১২-১৯৯১", id: "১-০২১৬৬", prl: "০১-১২-২০五十" },
+            { s: "১৬৩", n: "  জনাব মোঃ আতিকুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৫-১১-১৯৮৮", id: "১-০২১exploded", prl: "২৫-১১-২০৪৭" },
+            { s: "১৬৪", n: "  জনাব রাহুল সাহা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-০৯-১৯৮৭", id: "১-০২১৭২", prl: "২০-০৯-২০৪৬" },
+            { s: "১৬৫", n: "  জনাব মোঃ মহিবুল আজাদ রুবেল", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "০১-০৪-১৯  精度", id: "১-০২১৭৪", prl: "০১-০৪-২০ can" },
+            { s: "১৬৬", n: "  জনাব মোঃ তারেক উর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-০৩-১৯  精度", id: "১-০২১৭৫", prl: "২০-০৩-২০ can" },
+            { s: "১৬৭", n: "  জনাব মোঃ এনামুল হক", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৩-১২-১৯৮৬", id: "১-০২১৮১", prl: "১৩-১২-২০৪৫" },
+            { s: "১৬৮", n: "  জনাব অনিক বল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২২-১২-১৯৯১", id: "১-০২১৮২", prl: "২২-১২-২০五十" },
+            { s: "১৬৯", n: "  জনাব সাদিয়া শারমিন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-১২-১৯৮৯", id: "১-০২১৮৩", prl: "২০-১২-২০ coding" },
+            { s: "১৭০", n: "  জনাব এবিএম মওদুদ আহমেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৭-০৯-১৯৮৮", id: "১-০২১৮৫", prl: "০৭-০৯-২০৪৭" },
+            { s: "১৭১", n: "  জনাব মোঃ আরিফুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৫-十一-১৯৮৭", id: "১-০২১৮৬", prl: "১৫-十一-২০৪৬" },
+            { s: "১৭২", n: "  জনাব  মোঃ শাহাদাত হোসেন", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "২৭-০৯-১৯৮৯", id: "১-০২১৮৭", prl: "২৭-০৯-২০ coding" },
+            { s: "১৭৩", n: "  জনাব কুন্তল সরকার", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯১", id: "১-০২১৮৯", prl: "০১-০৯-২০... " },
+            { s: "১৭৪", n: "  জনাব সাবরীনা শামস", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৯-১২-১৯  精度", id: "১-০২১৯১", prl: "১৯-১২-২০ can" },
+            { s: "১৭৫", n: "  জনাব মোঃ জাকের সারোয়ার khan", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৮", id: "১-০২১৯২", prl: "০১-০১-২০৪৭" },
+            { s: "১৭৬", n: "  জনাব মোঃ সালাউদ্দিন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০৬-১৯৯১", id: "১-০২১৯৩", prl: "০১-০৬-২০ mini" },
+            { s: "১৭৭", n: "  জনাব মোঃ গিয়াশ কামাল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-十一-১৯৮৪", id: "১-০২১৯৪", prl: "৩০-十一-২০৪৩" },
+            { s: "১৭৮", n: "  জনাব তানভীর মাহমুদুল হাসান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "十一-১২-১৯  精度", id: "১-০২১৯৫", prl: "十一-১২-২০ can" },
+            { s: "১৭৯", n: "  জনাব ইসরাত জাহান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-০৭-১৯  精度", id: "১-০২১৯৬", prl: "৩০-০৭-২০ can" },
+            { s: "১৮০", n: "  জনাব দিলরুবা সুলতানা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৪-十一-১৯৯১", id: "১-০২১৯৭", prl: "১৪-十一-২০五十" },
+            { s: "১৮১", n: "  জনাবা تানিয়া ইলিয়াছ", d: "নির্বাহী প্রকৌশলী (ভারঃ)", dob: "১০-০১-১৯  精度", id: "১-০২১৯৯", prl: "১০-০১-২০ can" },
+            { s: "১৮২", n: "  জনাব এ.കെ.提升. শামসুল আরেফিন", d: "আবাসিক প্রকৌশলী (উপ-বিভাগীয় প্রকৌশলী)", dob: "২৯-十一-১৯৮৮", id: "১-০২২০০", prl: "২৯-十一-২০৪৭" },
+            { s: "১৮৩", n: "  জনাব মোঃ রাকিব হাসান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯  精度", id: "১-০২২০২", prl: "০১-০১-২০ can" },
+            { s: "১৮৪", n: "  জনাব শওকত আহমেদ জামাল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৫-০৭-১৯৮৮", id: "১-০২২MD", prl: "০৫-০৭-২০৪৭" },
+            { s: "১৮৫", n: "  জনাব সোহেনারা আফরোজ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৯-১০-১৯৮৮", id: "১-০২২MD", prl: "২৯-১০-২০৪৭" },
+            { s: "১৮৬", n: "  জনাব Hafiz জুবায়রul কাজমি", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৫-১০-১৯  精度", id: "১-০২২০৫", prl: "২৫-১০-২০ can" },
+            { s: "১৮৭", n: "  জনাব মোঃ মেজবাহ উদ্দিন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০২-০১-১৯৯১", id: "১-০২২MD", prl: "০২-০১-২০五十" },
+            { s: "১৮handle", n: "  জনাব মোঃ সোহাগ বেপারী", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৩-১২-১৯৮৬", id: "১-০২২০৮", prl: "০৩-১২-২০৪৫" },
+            { s: "১৮৯", n: "  জনাব মোঃ আনিছ-উজ-জামান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৯-十一-১৯৯১", id: "১-০২২১০", prl: "০৯-十一-২০... " },
+            { s: "১৯০", n: "  জনাব আল ইমরান রোমিও", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৫-১০-১৯৮৯", id: "১-০২২১২", prl: "০৫-১০-২০ coding" },
+            { s: "১৯১", n: "  জনাব আবদুল আউয়াল গাজী", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-১০-১৯৮৩", id: "১-০MD", prl: "১০-১০-২০... " },
+            { s: "১৯২", n: "  জনাব নূর মোহাম্মদ তারেক", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৪", id: "১-০২২১৪", prl: "০১-০১-২০৪৩" },
+            { s: "১৯৩", n: "  জনাব মোস্তাফিজ আহম্মেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৩-১০-১৯৮৮", id: "১-০২২১৫", prl: "২৩-১০-২০ can" },
+            { s: "১৯৪", n: "  জনাব সানি দাশ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৭-০৪-১৯৮৯", id: "১-০২২১৬", prl: "২৭-০৪-২০ coding" },
+            { s: "১৯৫", n: "  জনাব মোঃ আসাদুজ্জামান ভূঁইয়া", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৭-七-১৯৮৮", id: "১-০২২১৭", prl: "২৭-০৭-২০ coding" },
+            { s: "১৯৬", n: "  জনাব এ.এইচ.এম. গোলাম সারোয়ার", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৫-১০-১৯৯২", id: "১-০২২১৯", prl: "১৫-১০-২০৫১" },
+            { s: "১৯৭", n: "  জনাব হাসনাইন জামান khan", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৩-১০-১৯৮৯", id: "১-০২২২১", prl: "২৩-১০-২০ coding" },
+            { s: "১৯৮", n: "  জনাব নাসরিন নাহার", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০৬-১৯৯১", id: "১-০২২২০", prl: "০১-০৬-২০五十" },
+            { s: "১৯৯", n: "  জনাব মোঃ তাকমিল সাকির", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৮-১০-১৯  精度", id: "১-০২২২২", prl: "০৮-১০-২০ can" },
+            { s: "২০০", n: "  জনাব গাজী জাহিদুল হক", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১২-০২-১৯৮৭", id: "১-০২২২৫", prl: "১২-০২-২০৪৬" },
+            { s: "২০১", n: "  জনাব জয়ন্ত কুমার বসু", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৯-১০-১৯৯১", id: "১-০২২২৭", prl: "০৯-১০-২০五十" },
+            { s: "২০২", n: "  জনাব মোঃ নজরুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-০৫-১৯  精度", id: "১-০2228", prl: "৩০-০৫-২০ can" },
+            { s: "২০৩", n: "  জনাব ইমন কায়েস", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-১০-১৯৮৭", id: "১-০২২৩০", prl: "০১-১০-২০৪৬" },
+            { s: "২০৪", n: "  জনাব মোঃ হাসিবুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-১০-১৯৮৯", id: "১-০২২৩১", prl: "২০-১০-২০ coding" },
+            { s: "২০৫", n: "  জনাব কে.এম. রোকনুজ্জামান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৫-০৫-১৯৮৮", id: "১-০2MTE", prl: "১৫-০৫-২০ can" },
+            { s: "২০৬", n: "  জনাব মোহাম্মদ তকদিরুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৯-১০-১৯৮৯", id: "১-০২২৩৩", prl: "০৯-১০-২০ coding" },
+            { s: "২০৭", n: "  জনাব মোঃ মেহেদী হাসান", d: "আবাসিক প্রকৌশলী (উপ-বিভাগীয় প্রকৌশলী)", dob: "০২-০১-১৯৯১", id: "১-০2MTC", prl: "০২-০১-২০... " },
+            { s: "২০৮", n: "  জনাব ইরফান আহমেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-০৪-১৯  精度", id: "১-০২MTB", prl: "১০-০৪-২০ can" },
+            { s: "২০৯", n: "  জনাব জাওয়ার্ড আল রাতুন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩১-০৮-১৯৮৭", id: "১-০২MTA", prl: "৩১-০৮-২০৪৬" },
+            { s: "২১০", n: "  জনাব  এস এম রাফিউল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-十一-১৯৮৯", id: "১-০২MTz", prl: "৩০-十一-২০ coding" },
+            { s: "২১১", n: "  জনাব সৈকত রায়", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯১", id: "১-০২MTy", prl: "০১-০১-২০... " },
+            { s: "২১২", n: "  জনাব মোঃ রফিকুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৯-০৭-১৯৮৮", id: "১-০২MTx", prl: "১৯-০৭-২০ can" },
+            { s: "২১৩", n: "  জনাব আব্দুল্লাহ আল যুবায়ের", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "十一-০৯-১৯  精度", id: "১-০২MTw", prl: "十一-০৯-২০ can" },
+            { s: "২১৪", n: "  জনাব মোরশেদ আলম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৯", id: "১-০২MTv", prl: "০১-০১-২০ coding" },
+            { s: "২১৫", n: "  জনাব তাহমিদুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: " ৩১-১২-১৯৯১", id: "১-০২MTu", prl: "  ৩১-১২-২০ mini" },
+            { s: "২১৬", n: "  জনাব মোঃ মাহফুজুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-১০-১৯৮৯", id: "১-০২MTt", prl: "৩০-১০-২০ coding" },
+            { s: "২১৭", n: "  জনাব  মোঃ সোহানুর রহমান সোহাগ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৯-十一-১৯৮৯", id: "১-০২MTs", prl: "১৯-十一-২০ coding" },
+            { s: "২১৮", n: "  জনাব সাঈদ ইকবাল পারভেজ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৪-০৮-১৯  精度", id: "১-০২MTr", prl: "১৪-০৮-২০ can" },
+            { s: "২১৯", n: "  জনাব  মোঃ সুমন রেজা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-০৮-১৯৮৯", id: "১-০২MTq", prl: "২০-০৮-২০ coding" },
+            { s: "২২০", n: "  জনাব অনিন্দিতা দাশ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৪-০৪-১৯৮৫", id: "১-০২MTp", prl: "১৪-০৪-২০৪৪" },
+            { s: "২২১", n: "  জনাব প্রণয় আচার্য্য", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯  精度", id: "১-০২MTo", prl: "০১-০১-২০ can" },
+            { s: "২২২", n: "  জনাব মোঃ দাউদ শাকিল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৭-০৩-১৯৮৯", id: "১-০২MTn", prl: "১৭-০৩-২০ coding" },
+            { s: "২২৩", n: "  জনাব  ইশতিয়াক ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৫-০৮-১৯৯১", id: "১-০২MTm", prl: "১৫-০৮-২০ mini" },
+            { s: "২২৪", n: "  জনাব মোবাশ্বের এম হোসেন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৬-০৫-১৯৮৮", id: "১-০২MTl", prl: "১৬-০৫-২০ can" },
+            { s: "২২৫", n: "  জনাব কার্তিক মন্ডল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৬-১০-১৯৮৮", id: "১-০২MTk", prl: "১৬-১০-২০ can" },
+            { s: "২২৬", n: "  জনাব সমীর দেবনাথ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৭-১২-১৯৮৮", id: "১-০২MTj", prl: "২৭-১২-২০ can" },
+            { s: "২২৭", n: "  জনাব আদিত্য রঞ্জন চৌধুরী", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯১", id: "১-০২MTi", prl: "০১-০১-২০ mini" },
+            { s: "২২৮", n: "  জনাব  শোভন ভৌমিক", d: "আবাসিক প্রকৌশলী (উপ-বিভাগীয় প্রকৌশলী)", dob: "০৫-十一-১৯৮৭", id: "১-০২MTh", prl: "০৫-十一-২০৪৬" },
+            { s: "২২৯", n: "  জনাব মোঃ গোলাম ছামদানী", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৫-০৬-১৯৮৬", id: "১-০২MTg", prl: "১৫-০৬-২০৪৫" },
+            { s: "২৩Map", n: "  জনাব মোঃ আল-amin", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-০২-১৯৮৬", id: "১-০২MTf", prl: "১০-০২-২০৪৫" },
+            { s: "২৩১", n: "  জনাব মাহমুদুর রহমান চৌধুরী", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৮-১০-১৯Template", id: "১-০২MTe", prl: "১৮-১০-২০৫১" },
+            { s: "২৩২", n: "  জনাব সুকান্ত মিত্র বিশ্বাস", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১২-১০-১৯৮৮", id: "১-০২MTd", prl: "১২-১০-২০ can" },
+            { s: "২৩৩", n: "  জনাব মোহাম্মদ নাফিজ ইমতিয়াজ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৫", id: "১-০২MTc", prl: "০১-০১-২০... " },
+            { s: "২৩৪", n: "  জনাব নূরে মোহাম্মদ সরকার", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০২-০২-১৯৮৫", id: "১-০২MTb", prl: "০২-০২-২০৪৪" },
+            { s: "২৩৫", n: "  জনাব মোঃ আরেফিন হোসেন khan", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-১২-১৯৮৯", id: "১-০২MTa", prl: "০১-১২-২০ coding" },
+            { s: "২৩৬", n: "  জনাব খন্দকার নাজমুল আহমেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৮-০৩-১৯৯২", id: "১-০২MTZ", prl: "১৮-০৩-২০৫১" },
+            { s: "২৩৭", n: "  জনাব এস, এম, নাসিরuদ্দিন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৯-০১-১৯৮৫", id: "১-০২MTY", prl: "০৯-০১-২০... " },
+            { s: "২৩৮", n: "  জনাব রিপন মন্ডল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-০৯-১৯৮৬", id: "১-০২MTX", prl: "২০-০৯-২০৪৫" },
+            { s: "২৩৯", n: "  জনাব জেরিন জাবীন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৫-১২-১৯  精度", id: "১-০২MTW", prl: "১৫-১২-২০ stack" },
+            { s: "২৪০", n: "  জনাব  কামরুন নাহার", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-১০-১৯৮৬", id: "১-০২MTV", prl: "০১-১০-২০৪৫" },
+            { s: "২৪১", n: "  জনাব মাহবুবুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-十一-১৯  精度", id: "১-০২MTU", prl: "০১-十一-২০ can" },
+            { s: "২৪২", n: "  জনাব রনবীর চন্দ্র বর্মন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৭-০৮-১৯৮৬", id: "১-০২MTT", prl: "২৭-০৮-২০৪৫" },
+            { s: "২৪৩", n: "  জনাব মোঃ নিয়াজ মোর্শেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯৩", id: "১-০২MTS", prl: "০১-০১-২০৫২" },
+            { s: "২৪৪", n: "  জনাব মোহাম্মদ ফয়সুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩১-১২-১৯  精度", id: "১-০MTR", prl: "৩১-১২-২০ can" },
+            { s: "২৪৫", n: "  জনাব কানিজ ফাতেমা হুজায়ফা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১২-০৮-১৯৮৫", id: "১-০২MTQ", prl: "১২-০৮-২০৪৪" },
+            { s: "২৪৬", n: "  জনাব আবুল hasnat মোহাম্মদ রেজওয়ান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৯-十一-১৯৮৭", id: "১-০২MTP", prl: "১৯-十一-২০৪৬" },
+            { s: "২৪৭", n: "  জনাব অভিজিৎ চন্দ্র পাল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০৯-১৯৮৮", id: "১-০২MTO", prl: "০১-০৯-২০ coding" },
+            { s: "২৪৮", n: "  জনাব মোঃ সিফাত হাসান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০২-১৯৯২", id: "১-০২MTN", prl: "০১-০২-২০৫১" },
+            { s: "২৪৯", n: "  জনাব মোঃ আবু হারেছ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৩-০২-১৯৮৬", id: "১-০২MTM", prl: "০৩-০২-২০৪৫" },
+            { s: "২৫Map", n: "  জনাব কমল কান্ত দাস", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৭-১০-১৯৮৫", id: "১-০২MTL", prl: "১৭-১০-২০৪৪" },
+            { s: "২৫১", n: "  জনাব মোঃ ইকবাল হোসেন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৭", id: "১-০২MTK", prl: "০১-০১-২০৪৬" },
+            { s: "২৫২", n: "  জনাব  মোঃ মুইদুল এনাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩১-১২-১৯৯১", id: "১-০২MTJ", prl: "৩১-১২-২০ mini" },
+            { s: "২৫৩", n: "  জনাব মোঃ আরাফাত-আল-মাজিদ ভূইয়া", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৪-০৫-১৯৮৮", id: "১-০২MTI", prl: "২৪-০৫-২০ can" },
+            { s: "২৫৪", n: "  জনাব মোঃ আজিজুল ইসলাম আজদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৬-১২-১৯  精度", id: "১-০২MTH", prl: "১৬-১২-২০ can" },
+            { s: "২৫৫", n: "  জনাব রায়হান মাসুদ সাকিব", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৫-১০-১৯৯১", id: "১-০২MTG", prl: "২৫-১০-২০ mini" },
+            { s: "২৫u", n: "  জনাব মোঃ আলমগীর হোসেন রিয়াজ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৪-১০-১৯৮৯", id: "১-০২MTF", prl: "১৪-১০-২০ coding" },
+            { s: "২৫৭", n: "  জনাব রকিবুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৮-十一-১৯৮৮", id: "১-০২MTE", prl: "০৮-十一-২০ can" },
+            { s: "২৫৮", n: "  জনাব রওশন জাহান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৯-十一-১৯৮৭", id: "১-০২MTD", prl: "১৯-十一-২০৪৬" },
+            { s: "২৫৯", n: "  জনাব জয়তু বড়ুয়া", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-১২-১৯  精度", id: "১-০২MTC", prl: "৩০-১২-২০ can" },
+            { s: "২৬০", n: "  জনাব মোয়াজ্জেম হোসেন সায়েম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩১-১২-১৯৯২", id: "১-০২৩০১", prl: "৩১-১২-২০৫১" },
+            { s: "২৬১", n: "  জনাব মোঃ বকুল হোসেন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-০৬-১৯  精度", id: "১-০২৩০২", prl: "১০-০৬-২০ can" },
+            { s: "২৬২", n: "  জনাব  মোঃ পাভেল মাহমুদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-十一-১৯৯১", id: "১-০২৩০৮", prl: "৩০-十一-২০ mini" },
+            { s: "২৬৩", n: "  জনাব রফি আহমেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০৪-১৯৯২", id: "১-০২৩১৩", prl: "০১-০৪-২০৫১" },
+            { s: "২৬৪", n: "  জনাব মোঃ আবু হেলাল সোহেল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "十一-০৯-১৯৮৮", id: "১-০২৩১৫", prl: "十一-০৯-২০ can" },
+            { s: "২৬৫", n: "  জনাব আরহাম সিফাতুল তানজীম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-十一-১৯  精度", id: "১-০২৩১৬", prl: "২০-十一-২০ can" },
+            { s: "২৬৬", n: "  জনাব মোঃ ইমামুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯২", id: "১-০২৩১৭", prl: "০১-০১-২০৫১" },
+            { s: "২৬৭", n: "  জনাব মোঃ তানভীর পারভেজ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯২", id: "১-০২৩১৮", prl: "০১-০১-২০৫১" },
+            { s: "২৬৮", n: "  জনাব মোঃ সাদেকুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯৩", id: "১-০২৩২০", prl: "০১-০১-২০৫২" },
+            { s: "২৬৯", n: "  জনাব মোহাম্মদ ashraful আলম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৫-১০-১৯৮৯", id: "১-০২৩২১", prl: "২৫-১০-২০ coding" },
+            { s: "২৭০", n: "  জনাব কাজী তৌফিকুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০২-০১-১৯৮৭", id: "১-০২৩২৫", prl: "০২-০১-২০৪৬" },
+            { s: "২৭১", n: "  জনাব খাদিজা উম্মে তাহিরা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৫-০২-১৯৯৩", id: "১-০২৩২৭", prl: "২৫-০২-২০৫২" },
+            { s: "২৭২", n: "  জনাব জিনিয়া আফরিন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৬-০২-১৯৯২", id: "১-০২৩২৯", prl: "০৬-০২-২০৫১" },
+            { s: "২৭৩", n: "  জনাব ফাতেমা আহমেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "十九-১০-১৯৯২", id: "১-০২৩৩০", prl: "十九-১০-২০৫১" },
+            { s: "২৭৪", n: "  জনাব আফসানা আফরোজ তৃণা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-০৬-১৯৯১", id: "১-০২৩сс", prl: "১০-০৬-২০ mini" },
+            { s: "২৭৫", n: "  জনাব মোঃ মিনহাজুল হক", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৮-০৩-১৯৯২", id: "১-০২৩৩৪", prl: "০৮-০৩-২০৫১" },
+            { s: "২৭৬", n: "  জনাব কাজী আফিকুর রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৩-০৮-১৯৯২", id: "১-০২৩৩৫", prl: "০৩-০৮-২০৫১" },
+            { s: "২৭৭", n: "  জনাব ইমতিয়াজ মামুন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-০৬-১৯৮৯", id: "১-০২৩৩৬", prl: "২০-০৬-২০ coding" },
+            { s: "২৭৮", n: "  জনাব শান্তনু সাহা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-১২-১৯৯২", id: "১-০২৩৪১", prl: "০১-১২-২০৫১" },
+            { s: "২৭৯", n: "  জনাব তামিম khan", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯৩", id: "১-০২৩৪২", prl: "০১-০১-২০৫২" },
+            { s: "২৮০", n: "  জনাব মোঃ হাসিব উল্লাহ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৮-০৭-১৯৯৩", id: "১-০২৩২৭", prl: "২৮-০৭-২০৫২" },
+            { s: "২৮১", n: "  জনাব এস. এম. রাশিদুজ্জামান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৪-০৪-১৯  精度", id: "১-০২৩৪৪", prl: "০৪-০৪-২০ can" },
+            { s: "২৮২", n: "  জনাব মোঃ বাকি বিল্লাহ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৫-১২-১৯৮৬", id: "১-০২৩৪৫", prl: "১৫-১২-২০৪৫" },
+            { s: "২৮৩", n: "  জনাব এস, এ, এম, মহিউদ্দিন মোস্তফা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৭-十一-১৯৯১", id: "১-০২৩৪৬", prl: "২৭-十一-২০ mini" },
+            { s: "২৮৪", n: "  জনাব মোনামী ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩১-১২-১৯৯৩", id: "১-০২৩ND", prl: "৩১-১২-২০৫২" },
+            { s: "২৮৫", n: "  জনাব ফারহানা রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৯-০৭-১৯  精度", id: "১-০২৩৫০", prl: "২৯-০৭-২০৫২" },
+            { s: "২৮৬", n: "  জনাব mfiডুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-০২-১৯৮৮", id: "১-০২৩৫২", prl: "১০-০২-২০ can" },
+            { s: "২৮৭", n: "  জনাব দীপায়ন নাথ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "十六-十一-১৯৮৬", id: "১-০২৩৫৩", prl: "十六-十一-২০৪৫" },
+            { s: "২৮৮", n: "  জনাব রাকিবুল হাসান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৮-十一-১৯  精度", id: "১-০২৩Structure", prl: "২৮-十一-২০ can" },
+            { s: "২৮৯", n: "  জনাব মোঃ আবদুল কাইয়ুম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৪-১২-১৯৯৩", id: "১-০২৩৫৫", prl: "০৪-১২-২০৫২" },
+            { s: "২৯Map", n: "  জনাব ইমরান রহমান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯২", id: "১-০২৩৫৬", prl: "০১-০১-২০৫১" },
+            { s: "২৯১", n: "  জনাব সাফায়াত আহম্মেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৬-১০-১৯৯২", id: "১-০২৩৫৭", prl: "০৬-১০-২০৫১" },
+            { s: "২৯২", n: "  জনাব মোহাঃ ইউসুফ আলি", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩১-১০-১৯৯২", id: "১-০২৩৫৮", prl: "৩১-১০-২০৫১" },
+            { s: "২৯৩", n: "  জনাব রিপন কুমার কুন্ডu", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "十一-১০-১৯৯৩", id: "১-০২৩৬১", prl: "十一-১০-২০৫২" },
+            { s: "২৯৪", n: "  জনাব ফারহানা বিনতে কামরুল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১১-০৩-১৯৮৯", id: "১-০২৩৬২", prl: "১১-০৩-২০ coding" },
+            { s: "২৯৫", n: "  জনাব মোঃ মোস্তাফিজুর রহমান khan", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১৮-০৮-১৯৮৮", id: "১-০২৩৬৫", prl: "১৮-০৮-২০ can" },
+            { s: "২৯৬", n: "  জনাব টি. এম. রাফিউল হাসান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৪-০১-১৯৯২", id: "১-০২৩attach", prl: "২৪-০১-২০৫১" },
+            { s: "২৯৭", n: "  জনাব মারuফুল হক", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৮-十一-১৯৯১", id: "১-০২৩৬৮", prl: "২৮-十一-২০ mini" },
+            { s: "২৯৮", n: "  জনাব মোঃ রকিবুল হাসান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-১২-১৯৯৩", id: "১-০২৩编制", prl: "০১-১২-২০৫২" },
+            { s: "২৯৯", n: "  জনাব হামিদুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৫-০৩-১৯৮৮", id: "১-০২৩৭১", prl: "০৫-০৩-২০ can" },
+            { s: "৩০০", n: "  জনাব মোঃ হুমায়ন কবির", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৫-০৯-১৯৯২", id: "১-০২৩৭২", prl: "২৫-০৯-২০৫১" },
+            { s: "৩০১", n: "  জনাব আক্তার জাহান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৯-১২-১৯৯১", id: "১-০২৩৭৫", prl: "২৯-১২-২০ mini" },
+            { s: "৩০২", n: "  জনাব মোঃ রেজওয়ান ফেরদৌস", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৭", id: "১-০২৩৭৮", prl: "০১-০১-২০৪৬" },
+            { s: "৩০৩", n: "  জনাব শাহ মোঃ মতিউল লতিফ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৬-০৩-১৯৮৯", id: "১-০২৩৭৯", prl: "০৬-০৩-২০ coding" },
+            { s: "৩০৪", n: "  জনাব সৈয়দ জুবাইর আলী", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১২-০৮-১৯৯৪", id: "১-০২৩৮১", prl: "১২-০৮-২০৫৩" },
+            { s: "৩০৫", n: "  জনাব আহমেদ আনাস চৌধুরী", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৮-১০-১৯৯৪", id: "১-০২৩৮২", prl: "০৮-১০-২০৫৩" },
+            { s: "৩০৬", n: "  জনাব আজমল আহমেদ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৮-০৭-১৯  精度", id: "১-০২৩৮৩", prl: "০৮-০৭-২০৫১" },
+            { s: "৩০৭", n: "  জনাব অরিজয় চৌধুরী", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-০৯-১৯৯৩", id: "১-০২৩৮৫", prl: "১০-০৯-২০৫২" },
+            { s: "৩০handle", n: "  জনাব আবদুল্লাহ আল মোহাইমেন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৬-১০-১৯৯৩", id: "১-০২৩৮৬", prl: "২৬-১০-২০৫২" },
+            { s: "৩০৯", n: "  জনাব মোঃ আরাফাত হাসান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-১২-১৯  精度", id: "১-০২৩৮৭", prl: "০১-১২-২০৫৪" },
+            { s: "৩১০", n: "  জনাব  আশফুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৫-১২-১৯৯১", id: "১-০২৩৮৮", prl: "০৫-১২-২০ 50" },
+            { s: "৩১১", n: "  জনাব মোঃ মাহবুব হাসান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৮৯", id: "১-০২৩৯১", prl: "০১-০১-২০ coding" },
+            { s: "৩১২", n: "  জনাব মুহাম্মদ ওবায়দুল্লাহ আহরার", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "৩০-十一-১৯৯৪", id: "১-০২৩৯২", prl: "৩০-十一-২০৫৩" },
+            { s: "৩১৩", n: "  জনাব মোঃ হামজা ইমাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২১-১২-১৯Structure", id: "১-০২৩৩৯", prl: "২১-১২-২০ mini" },
+            { s: "৩১৪", n: "  জনাব মোঃ আসিফুজ্জামান", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৩-十一-১৯৯৪", id: "১-০২৩৯৩", prl: "২৩-十一-২০৫৩" },
+            { s: "৩১৫", n: "  জনাব মোঃ এনায়েত উল্লাহ", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "  ৩১-১২-১৯৮৯", id: "১-০২৩৯৫", prl: "  ৩১-১২-২০ coding" },
+            { s: "৩১৬", n: "  জনাব মোঃ সামিউন-রাজী সিফাত", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৭-০৫-১৯95", id: "১-০২৩৯৯", prl: "২৭-০৫-২০৫৪" },
+            { s: "৩১৭", n: "  জনাব শফিকুল আলম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৭-১২-১৯৮৯", id: "১-০২৪০০", prl: "০৭-১২-২০ can" },
+            { s: "৩১৮", n: "  জনাব মোঃ রবিন khan", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২১-০৯-১৯৮৯", id: "১-০২৪০১", prl: "২১-০৯-২০ coding" },
+            { s: "৩十九", n: "  জনাব रोजালিনা রফিক", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৮-০২-১৯৯৩", id: "১-০২৪MD", prl: "০৮-০২-২০৫২" },
+            { s: "৩২০", n: "  জনাব সৈকত সাহা", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯৩", id: "১-০২৪০৬", prl: "০১-০১-২০৫২" },
+            { s: "৩২১", n: "  জনাব মোঃ নাজিম উদ্দিন", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০১-০১-১৯৯২", id: "১-০২৪০৭", prl: "০১-০১-২০৫১" },
+            { s: "৩২২", n: "  জনাব মোহাম্মদ আসাদুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২৬-০২-১৯৯৪", id: "২-০৮২০", prl: "২৬-০২-২০৫৩" },
+            { s: "৩২৩", n: "  জনাব সমীক পোদ্দার", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৭-০৬-১৯৮৯", id: "১-০২৪০৯", prl: "০৭-০৬-২০ can" },
+            { s: "৩২৪", n: "  জনাব মোঃ আব্দুল জলিল", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "১০-১২-১৯৮৮", id: "১-০২৪১০", prl: "১০-১২-২০৪৭" },
+            { s: "৩২৫", n: "  জনাব এম. এম. ফাতিন হাসনাত", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "০৬-০৮-১৯৯৩", id: "১-০২৪১২", prl: "০৬-০৮-২০৫২" },
+            { s: "৩২৬", n: "  জনাব মোঃ শরীফুল ইসলাম", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২১-১২-১৯ Structure", id: "১-০২৪১৩", prl: "২১-১২-২০ mini" },
+            { s: "৩২৭", n: "  জনাব মোঃ ইমরান হোসেন তালুকদার", d: "উপ-বিভাগীয় প্রকৌশলী", dob: "২০-০৮-১৯৯৫", id: "১-০২৪১৪", prl: "২০-০৮-২০৫৪" }
+        ];
+
+        let dataset = [];
+        let trendChartInstance = null;
+        let pieChartInstance = null;
+
+        // Separate field validation logic
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (username === "SDE" && password === "2026") {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appWorkspace').classList.remove('hidden');
+                initApp();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        // Subsystem Lifecycle Engine initialization routing
+        function initApp() {
+            if(!sessionStorage.getItem('seniority_data')) {
+                sessionStorage.setItem('seniority_data', JSON.stringify(baseDataset));
+            }
+            dataset = JSON.parse(sessionStorage.getItem('seniority_data'));
+            renderTable(dataset);
+            rebuildAnalytics();
+            lucide.createIcons();
+        }
+
+        function syncState() {
+            sessionStorage.setItem('seniority_data', JSON.stringify(dataset));
+            document.getElementById('recordCount').innerText = dataset.length;
+            rebuildAnalytics();
+        }
+
+        function switchTab(target) {
+            const tabs = ['database', 'analytics'];
+            tabs.forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                document.getElementById(`tabBtn-${t}`).className = "px-4 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-950";
+            });
+            document.getElementById(`view-${target}`).classList.remove('hidden');
+            document.getElementById(`tabBtn-${target}`).className = "px-4 py-1.5 rounded-lg text-xs font-medium transition-all bg-white text-slate-950 shadow-sm";
+        }
+
+        // High Performance dynamic grid compiler rendering
+        function renderTable(dataSlice) {
+            const tbody = document.getElementById('tableBody');
+            const noResults = document.getElementById('noResults');
+            tbody.innerHTML = '';
+            document.getElementById('recordCount').innerText = dataSlice.length;
+
+            if(dataSlice.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            }
+            noResults.classList.add('hidden');
+
+            dataSlice.forEach((item) => {
+                const originalIndex = dataset.findIndex(el => el.id === item.id && el.s === item.s);
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-50/80 transition-colors group";
+                row.innerHTML = `
+                    <td class="py-3.5 px-6 font-medium text-slate-500 text-center">${item.s}</td>
+                    <td class="py-3.5 px-6 font-semibold text-slate-900">${item.n}</td>
+                    <td class="py-3.5 px-6 text-xs"><span class="px-2 py-1 rounded-md bg-slate-100 text-slate-700 font-medium">${item.d}</span></td>
+                    <td class="py-3.5 px-6 text-slate-600 text-xs">${item.dob}</td>
+                    <td class="py-3.5 px-6 font-mono text-xs text-slate-500">${item.id}</td>
+                    <td class="py-3.5 px-6 text-slate-600 text-xs">${item.prl}</td>
+                    <td class="py-3.5 px-6 text-right">
+                        <div class="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openModal('edit', ${originalIndex})" class="p-1.5 hover:bg-slate-100 text-slate-600 hover:text-slate-900 rounded-md transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteEntry(${originalIndex})" class="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-md transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function handleSearch() {
+            const term = document.getElementById('searchInput').value.toLowerCase().trim();
+            if(!term) { renderTable(dataset); return; }
+            renderTable(dataset.filter(i => 
+                i.n.toLowerCase().includes(term) || i.id.toLowerCase().includes(term) || i.d.toLowerCase().includes(term) || i.s.toString().includes(term)
+            ));
+        }
+
+        // Advanced Analytics Aggregation & Graph Compilation
+        function rebuildAnalytics() {
+            const prlMap = {};
+            const designativeMap = {};
+
+            dataset.forEach(item => {
+                const yearMatch = item.prl.match(/\d{4}/);
+                if (yearMatch) {
+                    const year = yearMatch[0];
+                    prlMap[year] = (prlMap[year] || 0) + 1;
+                }
+
+                let designativeLabel = item.d.trim();
+                if (designativeLabel.includes("উপ-বিভাগীয় প্রকৌশলী")) designativeLabel = "Sub-Divisional Engineer (SDE)";
+                else if (designativeLabel.includes("নির্বাহী প্রকৌশলী")) designativeLabel = "Executive Engineer (XEN)";
+                else if (designativeLabel.includes("উপ-ব্যবস্থাপক")) designativeLabel = "Deputy Manager";
+                else if (designativeLabel.includes("উপ-পরিচালক")) designativeLabel = "Deputy Director";
+                else if (designativeLabel.includes("সহকারী প্রধান প্রকৌশলী")) designativeLabel = "Assistant Chief Engineer";
+                else if (designativeLabel.includes("প্রকল্প পরিচালক")) designativeLabel = "Project Director";
+
+                designativeMap[designativeLabel] = (designativeMap[designativeLabel] || 0) + 1;
+            });
+
+            const statsContainer = document.getElementById('statsBreakdown');
+            statsContainer.innerHTML = '';
+            
+            Object.entries(designativeMap).forEach(([post, total]) => {
+                const widget = document.createElement('div');
+                widget.className = "bg-white border border-slate-200 p-4 rounded-xl shadow-sm";
+                widget.innerHTML = `
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider truncate" title="${post}">${post}</p>
+                    <p class="text-2xl font-bold text-slate-900 mt-1">${total}</p>
+                `;
+                statsContainer.appendChild(widget);
+            });
+
+            const sortedPrlYears = Object.keys(prlMap).sort();
+            const prlCounts = sortedPrlYears.map(y => prlMap[y]);
+
+            if (trendChartInstance) trendChartInstance.destroy();
+            const ctxTrend = document.getElementById('prlTrendChart').getContext('2d');
+            trendChartInstance = new Chart(ctxTrend, {
+                type: 'bar',
+                data: {
+                    labels: sortedPrlYears,
+                    datasets: [{
+                        label: 'Engineers Scheduled for PRL',
+                        data: prlCounts,
+                        backgroundColor: '#0f172a',
+                        borderRadius: 6,
+                        barThickness: 16
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [4, 4] } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            if (pieChartInstance) pieChartInstance.destroy();
+            const ctxPie = document.getElementById('postPieChart').getContext('2d');
+            pieChartInstance = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(designativeMap),
+                    datasets: [{
+                        data: Object.values(designativeMap),
+                        backgroundColor: ['#0f172a', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'],
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } }
+                }
+            });
+        }
+
+        // CRUD Event Handlers Windows Configurations
+        function openModal(mode, index = null) {
+            const modal = document.getElementById('actionModal');
+            const card = document.getElementById('modalCard');
+            document.getElementById('formActionContext').value = mode;
+
+            if(mode === 'add') {
+                document.getElementById('modalTitle').innerText = "Create New Seniority Record";
+                document.getElementById('entryForm').reset();
+                document.getElementById('targetIndexId').value = "";
+            } else if(mode === 'edit' && index !== null) {
+                document.getElementById('modalTitle').innerText = "Modify Registry Record Entries";
+                const item = dataset[index];
+                document.getElementById('targetIndexId').value = index;
+                document.getElementById('inputSerial').value = item.s;
+                document.getElementById('inputName').value = item.n;
+                document.getElementById('inputDesignation').value = item.d;
+                document.getElementById('inputDob').value = item.dob;
+                document.getElementById('inputId').value = item.id;
+                document.getElementById('inputPrl').value = item.prl;
+            }
+            modal.classList.remove('invisible', 'opacity-0');
+            card.classList.remove('scale-95');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('actionModal');
+            const card = document.getElementById('modalCard');
+            modal.classList.add('invisible', 'opacity-0');
+            card.classList.add('scale-95');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const mode = document.getElementById('formActionContext').value;
+            const index = document.getElementById('targetIndexId').value;
+
+            const entry = {
+                s: document.getElementById('inputSerial').value,
+                n: document.getElementById('inputName').value,
+                d: document.getElementById('inputDesignation').value,
+                dob: document.getElementById('inputDob').value,
+                id: document.getElementById('inputId').value,
+                prl: document.getElementById('inputPrl').value
+            };
+
+            if(mode === 'add') dataset.unshift(entry);
+            else if(mode === 'edit') dataset[index] = entry;
+
+            syncState();
+            closeModal();
+            handleSearch();
+        }
+
+        function deleteEntry(index) {
+            if(confirm("Confirm removal of entry vector allocation from current application local registry database?")) {
+                dataset.splice(index, 1);
+                syncState();
+                handleSearch();
+            }
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
